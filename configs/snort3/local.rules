@@ -1,0 +1,123 @@
+# ============================================================
+# local.rules — Règles Snort 3 personnalisées
+# Projet NSM Lab — DIC2 Cybersécurité ESP Dakar
+# ============================================================
+
+# ── Détection ICMP ──────────────────────────────────────────
+alert icmp any any -> any any
+(
+    msg:"NSM-SNORT - Ping détecté";
+    itype:8;
+    sid:2000001;
+    rev:1;
+)
+
+# ── Scan de ports ───────────────────────────────────────────
+alert tcp any any -> any any
+(
+    msg:"NSM-SNORT - Scan SYN détecté";
+    flags:S;
+    threshold:type threshold, track by_src, count 20, seconds 5;
+    sid:2000002;
+    rev:1;
+)
+
+alert tcp any any -> any any
+(
+    msg:"NSM-SNORT - Scan Nmap NULL détecté";
+    flags:0;
+    sid:2000003;
+    rev:1;
+)
+
+alert tcp any any -> any any
+(
+    msg:"NSM-SNORT - Scan Nmap XMAS détecté";
+    flags:FPU;
+    sid:2000004;
+    rev:1;
+)
+
+# ── Brute Force ─────────────────────────────────────────────
+alert tcp any any -> any 22
+(
+    msg:"NSM-SNORT - Brute force SSH détecté";
+    flags:S;
+    threshold:type threshold, track by_src, count 5, seconds 60;
+    sid:2000005;
+    rev:1;
+)
+
+alert tcp any any -> any 21
+(
+    msg:"NSM-SNORT - Brute force FTP détecté";
+    flags:S;
+    threshold:type threshold, track by_src, count 5, seconds 60;
+    sid:2000006;
+    rev:1;
+)
+
+alert tcp any any -> any 3389
+(
+    msg:"NSM-SNORT - Tentative connexion RDP détectée";
+    flags:S;
+    threshold:type threshold, track by_src, count 3, seconds 60;
+    sid:2000007;
+    rev:1;
+)
+
+# ── Attaques Web ────────────────────────────────────────────
+alert http any any -> any any
+(
+    msg:"NSM-SNORT - Tentative SQL Injection";
+    http_uri;
+    content:"UNION SELECT";
+    nocase;
+    sid:2000008;
+    rev:1;
+)
+
+alert http any any -> any any
+(
+    msg:"NSM-SNORT - Tentative Directory Traversal";
+    http_uri;
+    content:"../";
+    sid:2000009;
+    rev:1;
+)
+
+alert http any any -> any any
+(
+    msg:"NSM-SNORT - Tentative Command Injection";
+    http_uri;
+    content:"/etc/passwd";
+    sid:2000010;
+    rev:1;
+)
+
+# ── DNS ─────────────────────────────────────────────────────
+alert dns any any -> any any
+(
+    msg:"NSM-SNORT - Requête DNS suspecte volumineuse";
+    dsize:>100;
+    sid:2000011;
+    rev:1;
+)
+
+# ── ARP ─────────────────────────────────────────────────────
+alert arp any any -> any any
+(
+    msg:"NSM-SNORT - ARP Reply non sollicité détecté";
+    arp.opcode:2;
+    sid:2000012;
+    rev:1;
+)
+
+# ── Exfiltration de données ─────────────────────────────────
+alert tcp any any -> any any
+(
+    msg:"NSM-SNORT - Volume sortant anormal (exfiltration possible)";
+    threshold:type threshold, track by_src, count 500, seconds 10;
+    sid:2000013;
+    rev:1;
+)
